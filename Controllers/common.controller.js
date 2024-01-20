@@ -6,14 +6,13 @@ const bcrypt = require('bcrypt');
 const Admin = require("../models/admin.model");
 const { uploadToCloudinaryImage } = require("../utils/cloudinary");
 const { sendVerifyEmailAsLink } = require("../auth/mail/emailVerify");
-
+require('dotenv').config()
 
 const commonController = {
 
     async register(req, res) {
         try {
             const { email, username, password, mobile, image } = req.body;
-            console.log("here it is ", req.body);
             let userData;
             let validate;
 
@@ -33,7 +32,6 @@ const commonController = {
             )
 
             if (!validate.status) {
-                console.log("erroro nda");
                 return res.status(400).json({ message: validate.response[0].message })
             }
 
@@ -104,7 +102,6 @@ const commonController = {
     async login(req, res) {
         try {
             const { mobile, password, role } = req.body;
-            console.log(req.body);
             let userData
             let validate;
             userData = {
@@ -132,14 +129,12 @@ const commonController = {
                 const validatePass = await bcrypt.compare(password, user.password);
                 if (!validatePass)
                     return res.status(401).json({ message: "Password is incorrect!!" });
-                console.log(user, "userdata");
                 let authenticateEmail;
                 await sendVerifyEmailAsLink(
                     user.email,
                     user.mobile,
-                    "http://localhost:4200",
+                    process.env.ORIGIN,
                 ).then(async (response) => {
-                    console.log(response, "verifien");
                     authenticateEmail = response;
                     if (authenticateEmail.status == false)
                         return res.status(400).json({
@@ -154,7 +149,6 @@ const commonController = {
                 });
 
             } else if (role === "admin") {
-                console.log("admin");
                 user = await Admin.findOne({ mobile: mobile })
                 if (!user)
                     return res.status(404).json({ message: "Please enter a valid mobile number" });
